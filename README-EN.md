@@ -71,3 +71,17 @@ When image review is enabled, the first time image load will be slow because it 
 2. Due to the use of Cloudflare's network, the loading speed of images may not be guaranteed in some areas.
 
 3. The free version of Cloudflare Function is limited to 100,000 requests per day (i.e. the total number of uploads or loads of images cannot exceed 100,000), if this is exceeded, you may need to choose to purchase the paid package of Cloudflare Function.
+
+---
+
+## 🙏 Acknowledgments
+
+This project is inspired by:
+
+- [Telegraph-Image](https://github.com/cf-pages/Telegraph-Image) - Original inspiration
+
+---
+
+## 📄 License
+
+MIT License

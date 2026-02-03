@@ -10,10 +10,18 @@
     :root {
       --primary-color: #8a4bff;
       --primary-light: #b39ddb;
+      --primary-dark: #6c3ce0;
       --accent-color: #ffd7e4;
+      --success-color: #67c23a;
+      --warning-color: #e6a23c;
+      --danger-color: #f56c6c;
+      --info-color: #909399;
       --bg-gradient: linear-gradient(135deg, #ffd7e4 0%, #c8f1ff 100%);
-      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-bg: rgba(255, 255, 255, 0.88);
       --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      --shadow-hover: 0 12px 40px rgba(138, 75, 255, 0.2);
+      --border-radius: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     * {
@@ -24,8 +32,20 @@
 
     body {
       background: var(--bg-gradient);
+      background-attachment: fixed;
       min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+      color: #333;
+    }
+
+    /* 页面加载动画 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #app {
+      animation: fadeIn 0.5s ease-out;
     }
 
     #app {
@@ -39,55 +59,73 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 24px;
+      padding: 16px 28px;
       background: var(--card-bg);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      margin-bottom: 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: var(--border-radius);
+      margin-bottom: 24px;
       box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      position: sticky;
+      top: 20px;
+      z-index: 100;
     }
 
     .header-title {
       font-size: 1.5em;
-      font-weight: bold;
+      font-weight: 700;
       color: #333;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .header-title:hover {
+      transform: scale(1.02);
     }
 
     .header-title i {
       color: var(--primary-color);
+      font-size: 1.1em;
     }
 
     .nav-links {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       align-items: center;
     }
 
     .nav-links a {
-      padding: 8px 16px;
-      border-radius: 8px;
+      padding: 10px 18px;
+      border-radius: 10px;
       text-decoration: none;
-      color: #666;
-      transition: all 0.3s;
+      color: #555;
+      transition: var(--transition);
       font-size: 0.9em;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .nav-links a:hover {
-      background: var(--accent-color);
-      color: #333;
+      background: linear-gradient(135deg, rgba(138, 75, 255, 0.1), rgba(255, 215, 228, 0.3));
+      color: var(--primary-color);
+      transform: translateY(-2px);
     }
 
     .nav-links .logout-link {
-      color: #f56c6c;
-      border: 1px solid #f56c6c;
+      color: var(--danger-color);
+      border: 1.5px solid var(--danger-color);
     }
 
     .nav-links .logout-link:hover {
-      background: #f56c6c;
+      background: var(--danger-color);
       color: white;
+      transform: translateY(-2px);
     }
 
     /* 主容器 */
@@ -106,69 +144,109 @@
     /* 卡片样式 */
     .card {
       background: var(--card-bg);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: var(--border-radius);
+      padding: 28px;
       box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-hover);
     }
 
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .card-title {
-      font-size: 1.2em;
+      font-size: 1.25em;
       font-weight: 600;
       color: #333;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .card-title i {
       color: var(--primary-color);
+      font-size: 1.1em;
     }
 
     /* 上传区域 */
     .upload-zone {
-      border: 3px dashed var(--primary-light);
-      border-radius: 16px;
-      padding: 60px 40px;
+      border: 2.5px dashed var(--primary-light);
+      border-radius: 20px;
+      padding: 50px 40px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s;
-      background: linear-gradient(135deg, rgba(138, 75, 255, 0.05) 0%, rgba(255, 215, 228, 0.1) 100%);
+      transition: var(--transition);
+      background: linear-gradient(135deg, rgba(138, 75, 255, 0.03) 0%, rgba(255, 215, 228, 0.08) 100%);
       position: relative;
+      overflow: hidden;
+    }
+
+    .upload-zone::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(138, 75, 255, 0.08) 0%, rgba(255, 215, 228, 0.15) 100%);
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .upload-zone:hover::before, .upload-zone.dragover::before {
+      opacity: 1;
     }
 
     .upload-zone:hover, .upload-zone.dragover {
       border-color: var(--primary-color);
-      background: linear-gradient(135deg, rgba(138, 75, 255, 0.1) 0%, rgba(255, 215, 228, 0.2) 100%);
       transform: scale(1.01);
+      box-shadow: 0 8px 30px rgba(138, 75, 255, 0.15);
     }
 
     .upload-zone.dragover {
-      box-shadow: 0 0 20px rgba(138, 75, 255, 0.3);
+      box-shadow: 0 0 30px rgba(138, 75, 255, 0.25);
     }
 
     .upload-icon {
       font-size: 4em;
       color: var(--primary-light);
       margin-bottom: 20px;
+      transition: var(--transition);
+      position: relative;
+      z-index: 1;
+    }
+
+    .upload-zone:hover .upload-icon {
+      color: var(--primary-color);
+      transform: translateY(-5px);
     }
 
     .upload-text {
       font-size: 1.2em;
-      color: #666;
-      margin-bottom: 8px;
+      color: #555;
+      margin-bottom: 10px;
+      font-weight: 500;
+      position: relative;
+      z-index: 1;
     }
 
     .upload-hint {
       font-size: 0.9em;
-      color: #999;
+      color: #888;
+      position: relative;
+      z-index: 1;
     }
 
     .storage-target {
@@ -259,32 +337,37 @@
     .upload-methods {
       display: flex;
       gap: 12px;
-      margin-top: 20px;
+      margin-top: 24px;
       justify-content: center;
       flex-wrap: wrap;
     }
 
     .method-btn {
-      padding: 12px 20px;
+      padding: 14px 24px;
       border: 2px solid var(--primary-light);
-      border-radius: 12px;
+      border-radius: 14px;
       background: white;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: var(--transition);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       font-size: 0.95em;
+      font-weight: 500;
+      color: #555;
     }
 
     .method-btn:hover {
       border-color: var(--primary-color);
-      background: var(--accent-color);
-      transform: translateY(-2px);
+      background: linear-gradient(135deg, rgba(138, 75, 255, 0.08), rgba(255, 215, 228, 0.15));
+      color: var(--primary-color);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(138, 75, 255, 0.15);
     }
 
     .method-btn i {
       color: var(--primary-color);
+      font-size: 1.1em;
     }
 
     /* 上传进度列表 */
@@ -743,10 +826,37 @@
     }
 
     /* 响应式适配 */
+    @media (max-width: 900px) {
+      .header {
+        position: relative;
+        top: 0;
+      }
+    }
+
     @media (max-width: 600px) {
+      #app {
+        padding: 12px;
+      }
+
       .header {
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
+        padding: 16px 20px;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .nav-links a {
+        padding: 8px 12px;
+        font-size: 0.85em;
+      }
+
+      .card {
+        padding: 20px;
       }
 
       .upload-zone {
@@ -758,6 +868,20 @@
       }
 
       .method-btn {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .main-container {
+        gap: 16px;
+      }
+
+      .storage-switcher {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .storage-options {
         justify-content: center;
       }
     }

@@ -1,6 +1,21 @@
+:root {
+  --primary-color: #8a4bff;
+  --primary-light: #b39ddb;
+  --primary-dark: #6c3ce0;
+  --accent-color: #ffd7e4;
+  --success-color: #67c23a;
+  --warning-color: #e6a23c;
+  --danger-color: #f56c6c;
+  --bg-gradient: linear-gradient(135deg, #ffd7e4 0%, #c8f1ff 100%);
+  --card-bg: rgba(255, 255, 255, 0.88);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 body {
-  background: linear-gradient(90deg, #ffd7e4 0%, #c8f1ff 100%);
-  font-family: 'Arial', sans-serif;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
   color: #333;
   margin: 0;
   padding: 0;
@@ -8,27 +23,26 @@ body {
 
 .header-content {
   position: fixed;
-  top: 0;
-  left: 1%;
-  right: 1%;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   z-index: 999;
-  height: clamp(40px, 8vh, 60px);
+  height: clamp(48px, 8vh, 64px);
   display: flex;
   align-items: center;
-  padding: 10px 20px;
-  background-color: rgba(255, 255, 255, 0.75);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.5s ease, box-shadow 0.5s ease;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  padding: 12px 24px;
+  background-color: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  transition: var(--transition);
+  border-radius: 16px;
 }
 
 .header-content:hover {
-  background-color: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 32px rgba(138, 75, 255, 0.12);
 }
 
 .title {
@@ -147,18 +161,19 @@ body {
 .image-card {
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: rgba(255, 255, 255, 0.6) !important;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  background: var(--card-bg) !important;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   position: relative;
   object-fit: cover;
-  transition: transform 0.3s ease;
-  border: none;
+  transition: var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
 }
 
 .image-card:hover {
-  transform: scale(1.02);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 32px rgba(138, 75, 255, 0.15);
   cursor: pointer;
 }
 
@@ -276,36 +291,56 @@ body {
 
 /* 适配移动端 */
 @media (max-width: 768px) {
+  .header-content {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    padding: 10px 14px;
+    border-radius: 14px;
+  }
   .content {
-    grid-template-columns: 1fr; /* 单列布局 */
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
   }
   .stats-text{display: none;}
-  .header-content{padding: 8px 12px;}
   .stats{margin: 0 4px;}
   .stats, .actions i{margin: 0;}
   .el-card{aspect-ratio: unset; min-height: 180px;}
   .el-card__body{padding: 0;}
   .search-card {display: none;}
   .header-content .actions i{margin: 0 4px;}
+  .main-container {
+    margin-top: 76px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .header-content .actions i {
+    font-size: 1em;
+    margin: 0 3px;
+  }
 }
 
 /* 音视频卡片基础样式 */
 .video-card, .audio-card, .file-card {
-  background: linear-gradient(135deg, #8a4bffd9 0%, #6d82ffd9 100%);
+  background: linear-gradient(135deg, rgba(138, 75, 255, 0.9) 0%, rgba(109, 130, 255, 0.9) 100%);
   border: none;
-  border-radius: 16px !important;
+  border-radius: 20px !important;
   overflow: hidden;
   position: relative;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  box-shadow: 0 8px 24px rgba(138, 75, 255, 0.15);
+  transition: var(--transition);
 }
 
-.video-card{
-  background-color: #8EC5FC;
-  background-image: linear-gradient(62deg, #8EC5FC 0%, #E0C3FC 100%);
+.video-card {
+  background: linear-gradient(135deg, #8EC5FC 0%, #E0C3FC 100%);
 }
 
 .video-card .el-card__body{

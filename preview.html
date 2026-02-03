@@ -11,10 +11,13 @@
     :root {
       --primary-color: #8a4bff;
       --primary-light: #b39ddb;
+      --primary-dark: #6c3ce0;
       --accent-color: #ffd7e4;
       --bg-gradient: linear-gradient(135deg, #ffd7e4 0%, #c8f1ff 100%);
-      --card-bg: rgba(255, 255, 255, 0.9);
+      --card-bg: rgba(255, 255, 255, 0.92);
       --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      --shadow-hover: 0 12px 40px rgba(138, 75, 255, 0.15);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     * {
@@ -25,14 +28,21 @@
 
     body {
       background: var(--bg-gradient);
+      background-attachment: fixed;
       min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
     }
 
     .container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     /* 头部 */
@@ -40,24 +50,31 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 24px;
+      padding: 18px 28px;
       background: var(--card-bg);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      margin-bottom: 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 18px;
+      margin-bottom: 24px;
       box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .header-title {
-      font-size: 1.3em;
-      font-weight: bold;
+      font-size: 1.35em;
+      font-weight: 700;
       color: #333;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .header-title i { color: var(--primary-color); }
+    .header-title i { 
+      color: var(--primary-color); 
+      font-size: 1.1em;
+    }
 
     .header-actions {
       display: flex;
@@ -65,45 +82,51 @@
     }
 
     .btn {
-      padding: 10px 20px;
+      padding: 12px 24px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 0.9em;
+      font-weight: 500;
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.3s;
+      transition: var(--transition);
     }
 
     .btn-primary {
-      background: var(--primary-color);
+      background: linear-gradient(135deg, var(--primary-color), #9b6dff);
       color: white;
     }
 
     .btn-primary:hover {
-      background: #7a3ee8;
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
       transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(138, 75, 255, 0.3);
     }
 
     .btn-secondary {
       background: white;
-      color: #666;
-      border: 1px solid #ddd;
+      color: #555;
+      border: 1.5px solid #e0e0e0;
     }
 
     .btn-secondary:hover {
-      background: var(--accent-color);
-      color: #333;
+      background: linear-gradient(135deg, rgba(255, 215, 228, 0.5), rgba(200, 241, 255, 0.5));
+      border-color: var(--primary-light);
+      color: var(--primary-color);
+      transform: translateY(-2px);
     }
 
     /* 预览容器 */
     .preview-card {
       background: var(--card-bg);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 28px;
       box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.5);
     }
 
     .file-info {
