@@ -990,6 +990,15 @@
             this.$nextTick(() => {
               this.initAPlayer();
             });
+          } else if (this.previewType === 'image') {
+            // 图片：先设置 loading = false 让图片开始加载，onImageLoad 会处理后续
+            this.loading = false;
+          } else if (this.previewType === 'pdf') {
+            // PDF：直接加载
+            this.loading = false;
+          } else if (this.previewType === 'office') {
+            // Office 文档：iframe 加载完成会设置 loading = false
+            this.loading = false;
           } else if (this.previewType === 'unsupported') {
             this.loading = false;
           }

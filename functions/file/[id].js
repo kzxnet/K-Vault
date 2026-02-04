@@ -265,7 +265,7 @@ export async function onRequest(context) {
     return createStreamResponse(response, metadata.fileName, mimeType, rangeHeader);
 }
 
-// 创建流式响应，正确处理 Range 请求
+// 创建响应，正确处理 Range 请求和 CORS
 function createStreamResponse(upstreamResponse, fileName, mimeType, rangeHeader) {
     const headers = new Headers();
     
@@ -298,15 +298,8 @@ function createStreamResponse(upstreamResponse, fileName, mimeType, rangeHeader)
     // 缓存控制
     headers.set('Cache-Control', 'public, max-age=31536000');
     
-    // 使用 TransformStream 进行流式转发
-    const { readable, writable } = new TransformStream();
-    
-    // 异步管道传输，不阻塞响应
-    upstreamResponse.body.pipeTo(writable).catch(err => {
-        console.error('Stream pipe error:', err);
-    });
-    
-    return new Response(readable, {
+    // 直接传递 body，Cloudflare Workers 会自动处理流式传输
+    return new Response(upstreamResponse.body, {
         status: upstreamResponse.status,
         statusText: upstreamResponse.statusText,
         headers
@@ -448,13 +441,8 @@ async function handleR2File(context, r2Key, record = null) {
         // 设置文件名
         headers.set('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`);
         
-        // 使用 TransformStream 进行流式转发
-        const { readable, writable } = new TransformStream();
-        object.body.pipeTo(writable).catch(err => {
-            console.error('R2 stream pipe error:', err);
-        });
-        
-        return new Response(readable, { 
+        // 直接传递 body
+        return new Response(object.body, { 
             status: isPartialContent ? 206 : 200,
             headers 
         });
