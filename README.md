@@ -23,18 +23,18 @@
 <table>
   <tr>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/bfdd1fa0-e3e8-44d7-8379-f54a3d6a048b" alt="首页上传" style="width:100%">
+      <img src="demo/登录页面.webp" alt="登录页面" style="width:100%">
     </td>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/20c8dad5-cf7b-4e65-a662-ccc21deef03a" alt="图片浏览" style="width:100%">
+      <img src="demo/首页上传.webp" alt="首页上传" style="width:100%">
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/4c3e32b0-1acd-4152-a51f-d9d44d27a2a9" alt="后台管理" style="width:100%">
+      <img src="demo/后台面板.webp" alt="后台面板" style="width:100%">
     </td>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/0da27a87-111c-429b-8071-b11d3202bca2" alt="文件详情" style="width:100%">
+      <img src="demo/视频预览.webp" alt="视频预览" style="width:100%">
     </td>
   </tr>
 </table>
