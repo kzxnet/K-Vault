@@ -233,19 +233,9 @@ export async function onRequest(context) {
     }
     
     if (!record || !record.metadata) {
-        // Initialize metadata if it doesn't exist
-        console.log("Metadata not found, initializing...");
-        record = {
-            metadata: {
-                ListType: "None",
-                Label: "None",
-                TimeStamp: Date.now(),
-                liked: false,
-                fileName: params.id,
-                fileSize: 0,
-            }
-        };
-        await env.img_url.put(params.id, "", { metadata: record.metadata });
+        const headers = new Headers();
+        addCorsHeaders(headers);
+        return new Response('File not found', { status: 404, headers });
     }
 
     const metadata = {
@@ -300,10 +290,7 @@ export async function onRequest(context) {
         }
     }
 
-    // Only save metadata if content is not adult content
-    // Adult content cases are already handled above and will not reach this point
-    console.log("Saving metadata");
-    await env.img_url.put(params.id, "", { metadata });
+    // 已存在元数据，不再自动写入，避免删除后被重新创建
 
     // 使用流式响应返回文件
     return createStreamResponse(response, metadata.fileName, mimeType, rangeHeader);
@@ -339,8 +326,8 @@ function createStreamResponse(upstreamResponse, fileName, mimeType, rangeHeader)
     // 设置文件名
     headers.set('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`);
     
-    // 缓存控制
-    headers.set('Cache-Control', 'public, max-age=31536000');
+    // 缓存控制（删除后立即生效，避免缓存继续访问）
+    headers.set('Cache-Control', 'no-store, max-age=0');
     
     // 直接传递 body，Cloudflare Workers 会自动处理流式传输
     return new Response(upstreamResponse.body, {
@@ -372,7 +359,7 @@ async function handleStreamableFile(fileUrl, fileName, mimeType, rangeHeader, or
         headers.set('Content-Type', mimeType);
         headers.set('Accept-Ranges', 'bytes');
         headers.set('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
-        headers.set('Cache-Control', 'public, max-age=31536000');
+        headers.set('Cache-Control', 'no-store, max-age=0');
         
         // 透传关键头
         const contentLength = response.headers.get('Content-Length');
@@ -402,7 +389,7 @@ async function handleStreamableFile(fileUrl, fileName, mimeType, rangeHeader, or
         headers.set('Content-Type', mimeType);
         headers.set('Accept-Ranges', 'bytes');
         headers.set('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
-        headers.set('Cache-Control', 'public, max-age=31536000');
+        headers.set('Cache-Control', 'no-store, max-age=0');
         
         return new Response(response.body, {
             status: 200,
@@ -421,7 +408,7 @@ async function handleStreamableFile(fileUrl, fileName, mimeType, rangeHeader, or
         headers.set('Content-Length', totalSize.toString());
         headers.set('Accept-Ranges', 'bytes');
         headers.set('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
-        headers.set('Cache-Control', 'public, max-age=31536000');
+        headers.set('Cache-Control', 'no-store, max-age=0');
         
         return new Response(response.body, {
             status: 200,
@@ -455,7 +442,7 @@ async function handleStreamableFile(fileUrl, fileName, mimeType, rangeHeader, or
         headers.set('Content-Range', `bytes ${start}-${end}/${totalSize}`);
         headers.set('Accept-Ranges', 'bytes');
         headers.set('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
-        headers.set('Cache-Control', 'public, max-age=31536000');
+        headers.set('Cache-Control', 'no-store, max-age=0');
         
         return new Response(slicedBuffer, {
             status: 206,
@@ -600,7 +587,7 @@ async function handleR2File(context, r2Key, record = null) {
         }
         
         // 缓存控制
-        headers.set('Cache-Control', 'public, max-age=31536000');
+        headers.set('Cache-Control', 'no-store, max-age=0');
         
         // 设置文件名
         headers.set('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`);
