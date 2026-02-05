@@ -1,6 +1,11 @@
 export async function onRequest(context) {
     const { env, params } = context;
-    const fileId = params.id;
+    let fileId = params.id;
+    try {
+      fileId = decodeURIComponent(fileId);
+    } catch (e) {
+      console.warn('Failed to decode fileId, using raw value:', fileId);
+    }
     console.log('Deleting file:', fileId);
     
     try {
@@ -10,8 +15,10 @@ export async function onRequest(context) {
       
       if (env.img_url) {
         const prefixes = ['img:', 'vid:', 'aud:', 'doc:', 'r2:', ''];
-        for (const prefix of prefixes) {
-          const key = `${prefix}${fileId}`;
+        const hasKnownPrefix = prefixes.some(prefix => prefix && fileId.startsWith(prefix));
+        const candidateKeys = hasKnownPrefix ? [fileId] : prefixes.map(prefix => `${prefix}${fileId}`);
+
+        for (const key of candidateKeys) {
           record = await env.img_url.getWithMetadata(key);
           if (record && record.metadata) {
             actualKVKey = key; // 🔥 保存找到的实际Key
@@ -30,21 +37,32 @@ export async function onRequest(context) {
 
       // R2 文件：先删对象，再删 KV
       if (isR2) {
-        const r2Key = metadata.r2Key || fileId.replace('r2:', '');
+        const r2Key = metadata.r2Key
+          || (actualKVKey?.startsWith('r2:') ? actualKVKey.slice(3) : null)
+          || (fileId.startsWith('r2:') ? fileId.slice(3) : fileId);
         console.log('Deleting R2 object:', r2Key);
         
         if (!env.R2_BUCKET) {
           throw new Error('R2 未配置，无法删除对象');
         }
         
+        if (!r2Key) {
+          throw new Error('R2 Key 解析失败，无法删除对象');
+        }
+
         // 🔥 先删除R2对象，等待确认
         await env.R2_BUCKET.delete(r2Key);
         console.log('R2 object deleted successfully');
         
         // 🔥 然后删除KV元数据（使用正确的Key）
-        if (env.img_url && actualKVKey) {
-          await env.img_url.delete(actualKVKey);
-          console.log('KV metadata deleted:', actualKVKey);
+        if (env.img_url) {
+          if (actualKVKey) {
+            await env.img_url.delete(actualKVKey);
+            console.log('KV metadata deleted:', actualKVKey);
+          } else {
+            await env.img_url.delete(fileId);
+            console.log('KV metadata deleted by raw key:', fileId);
+          }
         }
 
         return new Response(JSON.stringify({ 
@@ -82,9 +100,14 @@ export async function onRequest(context) {
 
       // 🔥 如果没有messageId，仍然删除KV元数据（让文件无法访问）
       // 但会在响应中标注警告
-      if (env.img_url && actualKVKey) {
-        await env.img_url.delete(actualKVKey);
-        console.log('KV metadata deleted:', actualKVKey);
+      if (env.img_url) {
+        if (actualKVKey) {
+          await env.img_url.delete(actualKVKey);
+          console.log('KV metadata deleted:', actualKVKey);
+        } else {
+          await env.img_url.delete(fileId);
+          console.log('KV metadata deleted by raw key:', fileId);
+        }
       }
 
       const warningMessage = !metadata.telegramMessageId 
