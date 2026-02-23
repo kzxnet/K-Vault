@@ -43,6 +43,8 @@
 - **完全免费** - 托管于 Cloudflare，免费额度内零成本
 - **免费域名** - 使用 `*.pages.dev` 二级域名，也支持自定义域名
 - **多存储后端** - 支持 Telegram、Cloudflare R2、S3 兼容存储、Discord、HuggingFace
+- **Telegram Webhook 回链** - 机器人在频道/群接收文件后自动回复直链
+- **KV 写入优化** - Telegram 可启用签名直链，显著降低 KV 读写消耗
 - **内容审核** - 可选的图片审核 API，自动屏蔽不良内容
 - **多格式支持** - 图片、视频、音频、文档、压缩包等
 - **在线预览** - 支持图片、视频、音频、文档（pdf、docx、txt）格式的预览
@@ -98,6 +100,61 @@
 ---
 
 ## 存储配置
+
+### Telegram 增强模式（自部署 Bot API + Webhook）
+
+项目已支持将 Telegram API 基础地址切换为自部署 Bot API，并支持通过 Webhook 在群/频道接收文件后自动回复直链。
+
+**关键环境变量：**
+
+| 变量名 | 说明 | 示例 |
+| :--- | :--- | :--- |
+| `CUSTOM_BOT_API_URL` | 自部署 Bot API 地址（不填则默认 `https://api.telegram.org`） | `http://127.0.0.1:8081` |
+| `PUBLIC_BASE_URL` | Webhook 回链时使用的公网域名（建议填写） | `https://img.example.com` |
+| `TG_WEBHOOK_SECRET` | Webhook 密钥，校验头 `X-Telegram-Bot-Api-Secret-Token` | `your-secret` |
+| `TELEGRAM_LINK_MODE` | Telegram 链接模式，设为 `signed` 启用签名直链 | `signed` |
+| `MINIMIZE_KV_WRITES` | 设为 `true` 时启用低 KV 写入策略（也会启用签名直链） | `true` |
+| `FILE_URL_SECRET` | 签名直链密钥（不填则回退到 `TG_Bot_Token`） | `random-long-secret` |
+
+**Webhook 部署步骤：**
+
+1. 在 Telegram 中把 Bot 拉进目标频道/群并授予发言权限（频道建议管理员）。
+2. 在 Cloudflare Pages 中配置 `TG_Bot_Token`、`PUBLIC_BASE_URL`、`TG_WEBHOOK_SECRET`，然后重新部署。
+3. 调用 `setWebhook` 指向本项目接口：`https://你的域名/api/telegram/webhook`。
+4. 频道/群内发送图片或文件，Bot 会自动回复 `/file/...` 直链。
+
+**`setWebhook` 示例（官方 API）：**
+
+```bash
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d "{\"url\":\"https://img.example.com/api/telegram/webhook\",\"secret_token\":\"<YOUR_SECRET>\",\"allowed_updates\":[\"message\",\"channel_post\"]}"
+```
+
+**`setWebhook` 示例（自部署 Bot API）：**
+
+```bash
+curl -X POST "http://127.0.0.1:8081/bot<YOUR_BOT_TOKEN>/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d "{\"url\":\"https://img.example.com/api/telegram/webhook\",\"secret_token\":\"<YOUR_SECRET>\",\"allowed_updates\":[\"message\",\"channel_post\"]}"
+```
+
+> **关于 2G 文件：**  
+> 使用自部署 Bot API（`CUSTOM_BOT_API_URL`）并由 Telegram 客户端直接发到群/频道，再由 Webhook 回链，可利用 Bot API 大文件能力（常见可到 2GB）。  
+> 但网页上传链路仍受当前前端策略与 Cloudflare 请求体限制影响（见下方“使用限制”），不等同于前端直接上传 2GB。
+>
+> **注意：** 自部署 Bot API 下载文件会先缓存到本地磁盘，请预留足够空间并关注 I/O。
+
+### Telegram 低 KV 写入模式（可选）
+
+当你担心 Cloudflare KV 每日读写额度不够时，可以启用：
+
+- `TELEGRAM_LINK_MODE=signed`（仅 Telegram 文件使用签名直链）
+- 或 `MINIMIZE_KV_WRITES=true`（同时影响分片上传任务写入策略）
+
+启用后，Telegram 文件可不写入 KV 元数据，下载时通过签名参数直接解析 `file_id`，从而显著减少 KV 读写压力。
+
+> **取舍说明：** 低 KV 模式下，未写入 KV 的 Telegram 文件不会出现在后台文件列表中，也无法使用依赖 KV 元数据的标签/黑白名单/删除流程。
 
 ### KV 存储（图片管理，必需）
 
@@ -258,6 +315,13 @@
 | `ModerateContentApiKey` | 图片审核 API Key（从 [moderatecontent.com](https://moderatecontent.com) 获取） | - |
 | `WhiteList_Mode` | 白名单模式，仅白名单图片可加载 | `false` |
 | `USE_R2` | 启用 R2 存储 | `false` |
+| `CUSTOM_BOT_API_URL` | Telegram API 基础地址（支持自部署 Bot API） | `https://api.telegram.org` |
+| `PUBLIC_BASE_URL` | Webhook 回链时使用的公开域名 | 当前请求域名 |
+| `TG_WEBHOOK_SECRET` | Telegram Webhook 密钥（也兼容 `TELEGRAM_WEBHOOK_SECRET`） | - |
+| `TELEGRAM_LINK_MODE` | Telegram 链接模式（`signed` 为签名直链） | - |
+| `MINIMIZE_KV_WRITES` | 降低 KV 写入（也会启用签名直链） | `false` |
+| `FILE_URL_SECRET` | 签名直链密钥（也兼容 `TG_FILE_URL_SECRET`） | `TG_Bot_Token` |
+| `CHUNK_BACKEND` | 分片临时存储后端（`auto`/`r2`/`kv`） | `auto` |
 | `disable_telemetry` | 禁用遥测 | - |
 
 ---
@@ -281,17 +345,21 @@
 - 每日 100,000 次请求
 - KV 每日 1,000 次写入、100,000 次读取、1,000 次列出
 - 超出后需升级付费计划（$5/月起）
+- 建议 Telegram 场景开启签名直链或低 KV 写入模式以降低额度压力
 
 **各存储后端文件大小限制：**
 
 | 存储后端 | 单文件最大大小 |
 | :--- | :--- |
-| Telegram | 20MB |
+| Telegram（网页直传） | 小文件直传 20MB；分片流程当前上限 100MB |
+| Telegram（自部署 Bot API + Telegram 客户端 + Webhook） | 受 Bot API 与部署环境影响，常见可达 2GB |
 | Cloudflare R2 | 100MB（分片上传） |
 | S3 兼容存储 | 100MB（分片上传） |
 | Discord（无 Boost） | 25MB |
 | Discord（Level 2+） | 50-100MB |
 | HuggingFace | 35MB（普通）/ 50GB（LFS） |
+
+> 说明：`/api/upload-from-url` 当前仍按 20MB 限制处理 Telegram 上传。
 
 ---
 
@@ -301,9 +369,18 @@
 | :--- | :--- | :---: |
 | `TG_Bot_Token` | Telegram Bot Token | ✅ |
 | `TG_Chat_ID` | Telegram 频道 ID | ✅ |
+| `CUSTOM_BOT_API_URL` | 自部署 Telegram Bot API 地址 | 可选 |
+| `PUBLIC_BASE_URL` | Webhook 回链域名 | 可选 |
+| `TG_WEBHOOK_SECRET` | Telegram Webhook 密钥 | 可选 |
+| `TELEGRAM_WEBHOOK_SECRET` | 同上（兼容变量名） | 可选 |
+| `TELEGRAM_LINK_MODE` | Telegram 链接模式（`signed`） | 可选 |
+| `MINIMIZE_KV_WRITES` | 降低 KV 写入并启用签名直链 | 可选 |
+| `FILE_URL_SECRET` | 签名直链密钥 | 可选 |
+| `TG_FILE_URL_SECRET` | 同上（兼容变量名） | 可选 |
 | `BASIC_USER` | 管理后台用户名 | 可选 |
 | `BASIC_PASS` | 管理后台密码 | 可选 |
 | `USE_R2` | 启用 R2 存储 | 可选 |
+| `CHUNK_BACKEND` | 分片临时存储后端（`auto`/`r2`/`kv`） | 可选 |
 | `S3_ENDPOINT` | S3 端点 URL | 可选 |
 | `S3_REGION` | S3 区域 | 可选 |
 | `S3_ACCESS_KEY_ID` | S3 访问密钥 | 可选 |
@@ -327,6 +404,7 @@
 
 - [Cloudflare Pages 文档](https://developers.cloudflare.com/pages/)
 - [Telegram Bot API](https://core.telegram.org/bots/api)
+- [Telegram Bot API Server（自部署）](https://github.com/tdlib/telegram-bot-api)
 - [问题反馈](https://github.com/katelya77/Katelya-TGBed/issues)
 
 ---
