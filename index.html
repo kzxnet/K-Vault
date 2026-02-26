@@ -270,7 +270,8 @@
         transform: translateY(-2px);
       }
 
-      .nav-links .theme-toggle-btn {
+      .nav-links .theme-toggle-btn,
+      .header-theme-toggle {
         border: 1.5px solid rgba(138, 75, 255, 0.25);
         background: linear-gradient(
           135deg,
@@ -289,19 +290,27 @@
         gap: 8px;
       }
 
-      .nav-links .theme-toggle-btn i {
+      .header-theme-toggle {
+        margin-left: auto;
+        margin-right: 8px;
+      }
+
+      .nav-links .theme-toggle-btn i,
+      .header-theme-toggle i {
         color: var(--primary-color);
         width: 14px;
         text-align: center;
       }
 
-      .nav-links .theme-toggle-btn:hover {
+      .nav-links .theme-toggle-btn:hover,
+      .header-theme-toggle:hover {
         transform: translateY(-2px);
         border-color: var(--primary-color);
         box-shadow: 0 8px 20px rgba(138, 75, 255, 0.2);
       }
 
-      html[data-theme="dark"] .nav-links .theme-toggle-btn {
+      html[data-theme="dark"] .nav-links .theme-toggle-btn,
+      html[data-theme="dark"] .header-theme-toggle {
         background: linear-gradient(
           135deg,
           rgba(154, 169, 255, 0.2),
@@ -1241,6 +1250,17 @@
           font-size: 0.85em;
         }
 
+        .header-theme-toggle {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          min-height: 36px;
+          padding: 8px 12px;
+          font-size: 0.85em;
+          border-radius: 999px;
+          z-index: 3;
+        }
+
         .card {
           padding: 20px;
           border-radius: 14px;
@@ -1345,6 +1365,15 @@
           padding: 6px 10px;
           font-size: 0.78em;
           border-radius: 8px;
+          gap: 6px;
+        }
+
+        .header-theme-toggle {
+          top: 8px;
+          right: 8px;
+          min-height: 34px;
+          padding: 6px 10px;
+          font-size: 0.78em;
           gap: 6px;
         }
 
@@ -1564,11 +1593,11 @@
           />
           <span>K-Vault</span>
         </div>
+        <button type="button" class="theme-toggle-btn header-theme-toggle" data-theme-toggle aria-label="切换主题">
+          <i class="fas fa-moon" data-theme-icon></i>
+          <span data-theme-label>夜间</span>
+        </button>
         <div class="nav-links">
-          <button type="button" class="theme-toggle-btn" data-theme-toggle aria-label="切换主题">
-            <i class="fas fa-moon" data-theme-icon></i>
-            <span data-theme-label>夜间</span>
-          </button>
           <a href="./"><i class="fas fa-home"></i> 首页</a>
           <a href="./gallery.html" v-if="!isGuest"
             ><i class="fas fa-images"></i> 图片浏览</a

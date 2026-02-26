@@ -997,3 +997,19 @@ body {
     height: 34px;
   }
 }
+
+@media (max-width: 900px) {
+  .header-content .actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    row-gap: 8px !important;
+  }
+
+  .header-content .actions > .status-panel {
+    order: 120 !important;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    margin: 6px 0 0 !important;
+  }
+}
