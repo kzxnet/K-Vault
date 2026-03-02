@@ -35,6 +35,27 @@ function createApp() {
     return String(value);
   }
 
+  function firstNonEmpty(...values) {
+    for (const value of values) {
+      if (value == null) continue;
+      if (Array.isArray(value)) {
+        const nested = firstNonEmpty(...value);
+        if (nested != null) return nested;
+        continue;
+      }
+      if (value instanceof File) continue;
+      const normalized = String(value).trim();
+      if (normalized) return normalized;
+    }
+    return '';
+  }
+
+  function parseBoundedInt(value, fallback, min = 1, max = 1000) {
+    const parsed = Number.parseInt(String(value || ''), 10);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.max(min, Math.min(max, parsed));
+  }
+
   function authResult(c) {
     const { authService } = getServices(c);
     return authService.checkAuthentication(c.req.raw);
@@ -109,8 +130,12 @@ function createApp() {
     }
 
     const body = await c.req.json().catch(() => ({}));
-    const username = String(body.username || '');
-    const password = String(body.password || '');
+    const username = firstNonEmpty(body.username, body.user);
+    const password = String(body.password ?? body.pass ?? '');
+
+    if (!username || password === '') {
+      return c.json({ success: false, message: 'Missing username or password.' }, 400);
+    }
 
     if (username !== container.config.basicUser || password !== container.config.basicPass) {
       return c.json({ success: false, message: 'Invalid username or password.' }, 401);
@@ -644,8 +669,24 @@ function createApp() {
     if (unauthorized) return unauthorized;
 
     const { fileRepo } = getServices(c);
-    const limit = Number(c.req.query('limit') || 100);
-    const cursor = c.req.query('cursor') || null;
+    const limit = parseBoundedInt(
+      firstNonEmpty(c.req.query('limit'), c.req.query('pageSize'), c.req.query('size')),
+      100,
+      1,
+      1000
+    );
+
+    let cursor = firstNonEmpty(c.req.query('cursor'), c.req.query('offset'));
+    if (!cursor) {
+      const current = parseBoundedInt(
+        firstNonEmpty(c.req.query('page'), c.req.query('current')),
+        1,
+        1,
+        Number.MAX_SAFE_INTEGER
+      );
+      cursor = current > 1 ? String((current - 1) * limit) : null;
+    }
+
     const storage = c.req.query('storage') || 'all';
     const search = c.req.query('search') || '';
     const listType = c.req.query('listType') || c.req.query('list_type') || 'all';

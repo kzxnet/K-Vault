@@ -112,8 +112,10 @@
 1. 复制环境变量模板：
 
 ```bash
-cp .env.example .env
+npm run docker:init-env
 ```
+
+该命令会在 `.env` 不存在时自动创建，并仅在密钥为空或占位符时生成 `CONFIG_ENCRYPTION_KEY` 与 `SESSION_SECRET`，不会每次重置已有密钥。
 
 2. 至少填写以下关键变量：
    - `CONFIG_ENCRYPTION_KEY`
@@ -126,7 +128,7 @@ cp .env.example .env
 3. 启动服务：
 
 ```bash
-docker compose up -d --build
+npm run docker:up
 ```
 
 如需启用本地 Redis（用于基础设置存储）：
@@ -139,6 +141,27 @@ docker compose --profile redis up -d --build
    - Vue3 新版前端：`http://<host>:8080/app/`
 
 完整 Docker 说明请查看 [README-DOCKER.md](README-DOCKER.md)。
+
+### Docker 登录 API（curl 示例）
+
+`/api/auth/login` 同时兼容两种请求体：
+
+- `{"username":"...","password":"..."}`
+- `{"user":"...","pass":"..."}`
+
+```bash
+curl -i -X POST "http://localhost:8080/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"your_password"}'
+```
+
+```bash
+curl -i -X POST "http://localhost:8080/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"user":"admin","pass":"your_password"}'
+```
+
+安全提示：请勿泄露或提交 `.env` 内 token/secret（如 `TG_BOT_TOKEN`、`DISCORD_BOT_TOKEN`、`HF_TOKEN`、`SESSION_SECRET`、`CONFIG_ENCRYPTION_KEY`）；若疑似泄露请立即轮换并重启服务。
 
 ---
 

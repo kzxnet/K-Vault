@@ -7,16 +7,25 @@ This repository now supports two deployment modes:
 
 ## Quick Start (Docker)
 
-1. Copy env template:
+1. Initialize `.env` and secrets (safe to rerun):
 
 ```bash
-cp .env.example .env
+npm run docker:init-env
 ```
 
-2. Fill at least these required values in `.env`:
+Alternative shell entrypoint:
 
-- `CONFIG_ENCRYPTION_KEY`
-- `SESSION_SECRET`
+```bash
+bash scripts/bootstrap-env.sh
+```
+
+What this does:
+- if `.env` is missing, copy from `.env.example`
+- if `CONFIG_ENCRYPTION_KEY` / `SESSION_SECRET` are empty or placeholder values, generate secure random values
+- if those keys are already real values, keep them unchanged (prevents breaking decryption of existing storage configs)
+
+2. Fill at least these values in `.env`:
+
 - `BASIC_USER` / `BASIC_PASS` (optional, set both to enable login)
 - one bootstrap storage config (for example Telegram: `TG_BOT_TOKEN` + `TG_CHAT_ID`)
 - optional settings store mode:
@@ -26,13 +35,24 @@ cp .env.example .env
 3. Start services:
 
 ```bash
-docker compose up -d --build
+npm run docker:up
 ```
 
 4. Open:
 
 - Legacy UI: `http://<host>:8080/`
 - Vue3 App: `http://<host>:8080/app/`
+
+Expected startup status:
+
+```bash
+docker compose ps
+```
+
+You should see:
+- `kvault-api` -> `Up ... (healthy)`
+- `kvault-web` -> `Up ...`
+- `kvault-redis` -> `Up ... (healthy)` when started with `--profile redis`
 
 ### Optional: start with local Redis settings store
 
@@ -45,6 +65,28 @@ If you prefer Redis for basic app settings (also compatible with Upstash/KVrocks
 
 ```bash
 docker compose --profile redis up -d --build
+```
+
+## Login API (curl)
+
+`/api/auth/login` accepts both payload shapes:
+- new: `{ "username": "...", "password": "..." }`
+- compatible: `{ "user": "...", "pass": "..." }`
+
+Example:
+
+```bash
+curl -i -X POST "http://localhost:8080/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"your_password"}'
+```
+
+Compatibility example:
+
+```bash
+curl -i -X POST "http://localhost:8080/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"user":"admin","pass":"your_password"}'
 ```
 
 ## Architecture
@@ -65,6 +107,11 @@ docker compose --profile redis up -d --build
 
 Persistent data is stored in Docker volume `kvault_data` (and `kvault_redis` when Redis profile is enabled).
 
+## Networking Notes
+
+- `ports` publishes container ports to host (`web` uses `${WEB_PORT:-8080}:80`)
+- `expose` is internal-only for compose services (`api:8787`, `redis:6379`)
+
 ## Important Environment Variables
 
 | Variable | Description |
@@ -82,6 +129,24 @@ Persistent data is stored in Docker volume `kvault_data` (and `kvault_redis` whe
 | `SETTINGS_REDIS_CONNECT_TIMEOUT_MS` | Redis connect/ping timeout (ms), default `5000` |
 | `TG_BOT_TOKEN` + `TG_CHAT_ID` | Telegram bootstrap storage |
 | `R2_*` / `S3_*` / `DISCORD_*` / `HF_*` | Optional bootstrap configs for other backends |
+
+## Security Notes
+
+- Never expose or commit tokens/secrets (`TG_BOT_TOKEN`, `DISCORD_BOT_TOKEN`, `HF_TOKEN`, `SESSION_SECRET`, `CONFIG_ENCRYPTION_KEY`, etc.)
+- If any token/secret may be leaked, rotate it immediately and restart related services
+
+## Manage List API
+
+`GET /api/manage/list` now defaults to the first page when query parameters are omitted.
+
+Supported query parameters:
+- `limit` (or `pageSize` / `size`): items per page, default `100`, max `1000`
+- `cursor` (or `offset`): next offset returned by previous response
+- `page` (or `current`): page number (1-based), used when `cursor` is not provided
+- `storage`: `all`/`telegram`/`r2`/`s3`/`discord`/`huggingface`
+- `search`: fuzzy match on file name and id
+- `listType` (or `list_type`): `all`/`None`/`White`/`Block`
+- `includeStats` (or `stats`): `1|true|yes` to include summary stats
 
 ## Deployment Notes
 
@@ -123,6 +188,36 @@ Persistent data is stored in Docker volume `kvault_data` (and `kvault_redis` whe
 
 - Usually suitable when Docker/Compose is available.
 - Requirements: enable Docker/Compose, import `docker-compose.yml`, map persistent volume, and expose port 8080 (or custom `WEB_PORT`).
+
+## FAQ
+
+### `.env` missing
+
+Run:
+
+```bash
+npm run docker:init-env
+```
+
+This recreates `.env` from `.env.example` and only auto-fills secret keys when needed.
+
+### `Failed to decrypt storage config "...". Check CONFIG_ENCRYPTION_KEY.`
+
+Cause: `CONFIG_ENCRYPTION_KEY` changed after encrypted configs were written to SQLite.
+
+Fix:
+- restore the original `CONFIG_ENCRYPTION_KEY`
+- if the original key is lost, delete/recreate affected storage configs in DB
+- avoid editing `CONFIG_ENCRYPTION_KEY` on running instances unless you are doing a planned migration
+
+### Docker Compose buildx/bake warning
+
+Some Docker versions print a bake-related hint/warning during `docker compose build`.
+
+Options:
+- ignore it (build still works)
+- enable bake explicitly: `set COMPOSE_BAKE=true` (PowerShell: `$env:COMPOSE_BAKE='true'`)
+- or disable it: `set COMPOSE_BAKE=false`
 
 ## Local Development
 
