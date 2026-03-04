@@ -557,7 +557,7 @@
                 <el-dropdown-item command="editWebsites"><i class="fas fa-edit"></i> 编辑快捷方式</el-dropdown-item>
                 <el-dropdown-item command="openUploader"><i class="fas fa-cloud-upload-alt"></i> 打开上传中心</el-dropdown-item>
                 <el-dropdown-item command="exportLinks"><i class="fas fa-file-export"></i> 导出全部链接</el-dropdown-item>
-                <el-dropdown-item command="manageApiTokens"><i class="fas fa-key"></i> API Tokens</el-dropdown-item>
+                <el-dropdown-item command="manageApiTokens"><i class="fas fa-key"></i> API Token 管理</el-dropdown-item>
                 <el-dropdown-item command="checkStatus" divided><i class="fas fa-heartbeat"></i> 检查连接状态</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
@@ -897,20 +897,20 @@
       </el-main>
     </el-container>
     <el-dialog
-      title="API Token Management"
+      title="API Token 管理"
       :visible.sync="tokenDialogVisible"
       width="860px"
       custom-class="token-manager-dialog">
       <div class="token-toolbar">
-        <el-button size="mini" type="primary" icon="el-icon-plus" @click="openCreateTokenDialog">Create Token</el-button>
-        <el-button size="mini" icon="el-icon-refresh" :loading="tokenLoading" @click="loadApiTokens">Refresh</el-button>
+        <el-button size="mini" type="primary" icon="el-icon-plus" @click="openCreateTokenDialog">新建 Token</el-button>
+        <el-button size="mini" icon="el-icon-refresh" :loading="tokenLoading" @click="loadApiTokens">刷新</el-button>
       </div>
       <div v-if="tokenLoading" class="token-loading">
-        <i class="el-icon-loading"></i> Loading tokens...
+        <i class="el-icon-loading"></i> 正在加载 Token...
       </div>
       <div v-else-if="apiTokens.length === 0" class="token-empty">
         <i class="fas fa-key"></i>
-        <p>No API token yet. Create one for scripts, curl, or ShareX uploads.</p>
+        <p>暂无 API Token，可创建后用于脚本、curl 或 ShareX 上传。</p>
       </div>
       <el-table
         v-else
@@ -919,8 +919,8 @@
         border
         size="mini"
         row-key="id">
-        <el-table-column prop="name" label="Name" min-width="170"></el-table-column>
-        <el-table-column label="Scopes" min-width="190">
+        <el-table-column prop="name" label="名称" min-width="170"></el-table-column>
+        <el-table-column label="权限" min-width="190">
           <template slot-scope="scope">
             <el-tag
               v-for="scopeName in scope.row.scopes"
@@ -932,24 +932,24 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Created" min-width="140">
+        <el-table-column label="创建时间" min-width="140">
           <template slot-scope="scope">
             <div>{{ formatDateTime(scope.row.createdAt) }}</div>
             <small class="token-time-hint">{{ formatRelativeTime(scope.row.createdAt) }}</small>
           </template>
         </el-table-column>
-        <el-table-column label="Last Used" min-width="140">
+        <el-table-column label="最后使用" min-width="140">
           <template slot-scope="scope">
             <span v-if="scope.row.lastUsedAt">{{ formatRelativeTime(scope.row.lastUsedAt) }}</span>
-            <span v-else class="token-time-hint">Never used</span>
+            <span v-else class="token-time-hint">从未使用</span>
           </template>
         </el-table-column>
-        <el-table-column label="Preview" min-width="122">
+        <el-table-column label="Token 预览" min-width="122">
           <template slot-scope="scope">
             <code>{{ scope.row.tokenPreview }}</code>
           </template>
         </el-table-column>
-        <el-table-column label="Status" width="176" align="center">
+        <el-table-column label="状态" width="176" align="center">
           <template slot-scope="scope">
             <el-switch
               v-model="scope.row.enabled"
@@ -959,18 +959,18 @@
               @change="toggleApiTokenEnabled(scope.row)">
             </el-switch>
             <span class="token-status-text" :class="{ 'is-enabled': scope.row.enabled }">
-              {{ scope.row.enabled ? 'Enabled' : 'Disabled' }}
+              {{ scope.row.enabled ? '启用' : '禁用' }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="Actions" width="86" align="center">
+        <el-table-column label="操作" width="86" align="center">
           <template slot-scope="scope">
             <el-button
               type="text"
               style="color:#f56c6c"
               :disabled="Boolean(tokenMutatingMap[scope.row.id])"
               @click="removeApiToken(scope.row)">
-              Delete
+              删除
             </el-button>
           </template>
         </el-table-column>
@@ -978,57 +978,57 @@
     </el-dialog>
 
     <el-dialog
-      title="Create API Token"
+      title="创建 API Token"
       :visible.sync="createTokenDialogVisible"
       width="560px"
       append-to-body
       custom-class="token-create-dialog">
       <el-form label-position="top" size="small">
-        <el-form-item label="Token Name">
-          <el-input v-model="tokenForm.name" maxlength="64" placeholder="e.g. ShareX Upload / CI Backup"></el-input>
+        <el-form-item label="Token 名称">
+          <el-input v-model="tokenForm.name" maxlength="64" placeholder="例如：ShareX 截图上传 / CI 备份脚本"></el-input>
         </el-form-item>
-        <el-form-item label="Permissions">
+        <el-form-item label="权限">
           <el-checkbox-group v-model="tokenForm.scopes" class="token-scope-group">
-            <el-checkbox label="upload"><i class="fas fa-upload"></i> Upload file</el-checkbox>
-            <el-checkbox label="read"><i class="fas fa-eye"></i> Read/list/download</el-checkbox>
-            <el-checkbox label="delete"><i class="fas fa-trash-alt"></i> Delete file/paste</el-checkbox>
-            <el-checkbox label="paste"><i class="fas fa-file-alt"></i> Create paste</el-checkbox>
+            <el-checkbox label="upload"><i class="fas fa-upload"></i> 上传文件</el-checkbox>
+            <el-checkbox label="read"><i class="fas fa-eye"></i> 读取/列表/下载</el-checkbox>
+            <el-checkbox label="delete"><i class="fas fa-trash-alt"></i> 删除文件/粘贴</el-checkbox>
+            <el-checkbox label="paste"><i class="fas fa-file-alt"></i> 创建文本粘贴</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
-        <el-form-item label="Expiry">
-          <el-select v-model="tokenForm.expiryPreset" placeholder="Select expiry" style="width:100%;">
-            <el-option label="Never expires" value="never"></el-option>
-            <el-option label="7 days" value="7d"></el-option>
-            <el-option label="30 days" value="30d"></el-option>
-            <el-option label="90 days" value="90d"></el-option>
-            <el-option label="Custom date/time" value="custom"></el-option>
+        <el-form-item label="过期时间">
+          <el-select v-model="tokenForm.expiryPreset" placeholder="请选择过期策略" style="width:100%;">
+            <el-option label="永不过期" value="never"></el-option>
+            <el-option label="7 天后过期" value="7d"></el-option>
+            <el-option label="30 天后过期" value="30d"></el-option>
+            <el-option label="90 天后过期" value="90d"></el-option>
+            <el-option label="自定义时间" value="custom"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="tokenForm.expiryPreset === 'custom'" label="Custom Expiry Date">
+        <el-form-item v-if="tokenForm.expiryPreset === 'custom'" label="自定义过期时间">
           <el-date-picker
             v-model="tokenForm.customExpiresAt"
             type="datetime"
             style="width:100%;"
             value-format="timestamp"
-            placeholder="Select date and time">
+            placeholder="选择日期和时间">
           </el-date-picker>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button size="small" @click="createTokenDialogVisible = false">Cancel</el-button>
-        <el-button size="small" type="primary" :loading="tokenCreateLoading" @click="createApiToken">Create</el-button>
+        <el-button size="small" @click="createTokenDialogVisible = false">取消</el-button>
+        <el-button size="small" type="primary" :loading="tokenCreateLoading" @click="createApiToken">创建</el-button>
       </span>
     </el-dialog>
 
     <el-dialog
-      title="Token Created"
+      title="Token 已创建"
       :visible.sync="createdTokenDialogVisible"
       width="620px"
       append-to-body
       custom-class="token-created-dialog">
       <div class="token-once-warning">
         <i class="fas fa-exclamation-triangle"></i>
-        This is the only time the full token is shown. Copy it now.
+        完整 Token 仅在此处展示一次，请立即复制并妥善保存。
       </div>
       <el-input
         type="textarea"
@@ -1038,7 +1038,7 @@
       </el-input>
       <div class="token-created-actions">
         <el-button size="small" type="primary" @click="copyCreatedTokenValue">
-          {{ createdTokenCopied ? 'Copied ✓' : 'Copy Token' }}
+          {{ createdTokenCopied ? '已复制 ✓' : '复制 Token' }}
         </el-button>
       </div>
     </el-dialog>
@@ -1417,15 +1417,15 @@
       },
       formatRelativeTime(timestamp) {
         const value = Number(timestamp || 0);
-        if (!Number.isFinite(value) || value <= 0) return 'Never';
+        if (!Number.isFinite(value) || value <= 0) return '从未';
         const diff = Date.now() - value;
         const minute = 60 * 1000;
         const hour = 60 * minute;
         const day = 24 * hour;
-        if (diff < minute) return 'Just now';
-        if (diff < hour) return `${Math.floor(diff / minute)} min ago`;
-        if (diff < day) return `${Math.floor(diff / hour)} hr ago`;
-        if (diff < day * 30) return `${Math.floor(diff / day)} day ago`;
+        if (diff < minute) return '刚刚';
+        if (diff < hour) return `${Math.floor(diff / minute)} 分钟前`;
+        if (diff < day) return `${Math.floor(diff / hour)} 小时前`;
+        if (diff < day * 30) return `${Math.floor(diff / day)} 天前`;
         return this.formatDateTime(value);
       },
       openApiTokenDialog() {
@@ -1461,11 +1461,11 @@
           });
           const payload = await response.json();
           if (!response.ok || !payload?.success) {
-            throw new Error(payload?.error?.message || payload?.message || 'Failed to load tokens.');
+            throw new Error(payload?.error?.message || payload?.message || '加载 Token 列表失败。');
           }
           this.apiTokens = Array.isArray(payload.tokens) ? payload.tokens : [];
         } catch (error) {
-          this.$message.error(error.message || 'Failed to load API tokens.');
+          this.$message.error(error.message || '加载 API Token 失败。');
         } finally {
           this.tokenLoading = false;
         }
@@ -1474,16 +1474,16 @@
         const name = String(this.tokenForm.name || '').trim();
         const scopes = Array.isArray(this.tokenForm.scopes) ? this.tokenForm.scopes : [];
         if (!name) {
-          this.$message.warning('Token name is required.');
+          this.$message.warning('请输入 Token 名称。');
           return;
         }
         if (scopes.length === 0) {
-          this.$message.warning('Select at least one permission.');
+          this.$message.warning('请至少选择一个权限。');
           return;
         }
         const expiresAt = this.resolveTokenExpiresAt();
         if (String(this.tokenForm.expiryPreset) === 'custom' && !expiresAt) {
-          this.$message.warning('Please select a valid future expiry date.');
+          this.$message.warning('请选择有效的未来过期时间。');
           return;
         }
         this.tokenCreateLoading = true;
@@ -1500,7 +1500,7 @@
           });
           const payload = await response.json();
           if (!response.ok || !payload?.success) {
-            throw new Error(payload?.error?.message || payload?.message || 'Failed to create token.');
+            throw new Error(payload?.error?.message || payload?.message || '创建 Token 失败。');
           }
           this.createTokenDialogVisible = false;
           this.createdTokenValue = String(payload.token || '');
@@ -1508,7 +1508,7 @@
           this.createdTokenDialogVisible = true;
           await this.loadApiTokens();
         } catch (error) {
-          this.$message.error(error.message || 'Failed to create token.');
+          this.$message.error(error.message || '创建 Token 失败。');
         } finally {
           this.tokenCreateLoading = false;
         }
@@ -1542,12 +1542,12 @@
           });
           const payload = await response.json();
           if (!response.ok || !payload?.success) {
-            throw new Error(payload?.error?.message || payload?.message || 'Failed to update token status.');
+            throw new Error(payload?.error?.message || payload?.message || '更新 Token 状态失败。');
           }
-          this.$message.success(nextEnabled ? 'Token enabled.' : 'Token disabled.');
+          this.$message.success(nextEnabled ? 'Token 已启用。' : 'Token 已禁用。');
         } catch (error) {
           token.enabled = !nextEnabled;
-          this.$message.error(error.message || 'Failed to update token status.');
+          this.$message.error(error.message || '更新 Token 状态失败。');
         } finally {
           this.$delete(this.tokenMutatingMap, tokenId);
         }
@@ -1556,10 +1556,10 @@
         const tokenId = token?.id;
         if (!tokenId) return;
         try {
-          await this.$confirm(`Delete token "${token.name}" ?`, 'Confirm', {
+          await this.$confirm(`确认删除 Token「${token.name}」吗？`, '删除确认', {
             type: 'warning',
-            confirmButtonText: 'Delete',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: '删除',
+            cancelButtonText: '取消',
           });
         } catch {
           return;
@@ -1573,12 +1573,12 @@
           });
           const payload = await response.json();
           if (!response.ok || !payload?.success) {
-            throw new Error(payload?.error?.message || payload?.message || 'Failed to delete token.');
+            throw new Error(payload?.error?.message || payload?.message || '删除 Token 失败。');
           }
           this.apiTokens = this.apiTokens.filter((item) => item.id !== tokenId);
-          this.$message.success('Token deleted.');
+          this.$message.success('Token 已删除。');
         } catch (error) {
-          this.$message.error(error.message || 'Failed to delete token.');
+          this.$message.error(error.message || '删除 Token 失败。');
         } finally {
           this.$delete(this.tokenMutatingMap, tokenId);
         }

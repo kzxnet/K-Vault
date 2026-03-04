@@ -594,7 +594,7 @@ curl -X POST "http://127.0.0.1:8081/bot<YOUR_BOT_TOKEN>/setWebhook" \
 ### 1. 创建 API Token
 
 1. 打开管理面板 `/admin.html`
-2. 点击工具箱（Toolbox）菜单中的 **API Tokens**
+2. 点击工具箱菜单中的 **API Token 管理**
 3. 创建 Token 时按需选择权限：`upload` / `read` / `delete` / `paste`，并设置过期时间
 
 ### 2. 常用示例
@@ -639,16 +639,16 @@ kvault() {
 
 ### 3. ShareX 配置
 
-- Destination type: Image uploader / File uploader
-- Request URL: `https://your-kvault.com/api/v1/upload`
-- Headers: `Authorization: Bearer kvault_xxxxxxxxxxxx`
-- Body: Form data (`multipart/form-data`)
-- File form name: `file`
-- URL path: `$.links.download`（或 `$.links.share`）
+- 目标类型（Destination type）：`Image uploader` / `File uploader`
+- 请求地址（Request URL）：`https://your-kvault.com/api/v1/upload`
+- 请求头（Headers）：`Authorization: Bearer kvault_xxxxxxxxxxxx`
+- 请求体（Body）：`Form data`（`multipart/form-data`）
+- 文件字段名（File form name）：`file`
+- 返回 URL 路径（URL path）：`$.links.download`（或 `$.links.share`）
 
 ### 4. API 端点速查
 
-| Method | Endpoint | Scope | Description |
+| 方法 | 端点 | 权限 | 说明 |
 | :--- | :--- | :--- | :--- |
 | POST | `/api/v1/upload` | `upload` | 上传文件（`multipart/form-data`，字段 `file`） |
 | GET | `/api/v1/files` | `read` | 列出文件（支持分页） |

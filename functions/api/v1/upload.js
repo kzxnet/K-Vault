@@ -119,7 +119,7 @@ async function applyApiUploadMetadata(env, key, originalMetadata, options = {}) 
   if (slug) {
     const existing = await env.img_url.get(`${SHARE_SLUG_KEY_PREFIX}${slug}`);
     if (existing && String(existing) !== String(key)) {
-      throw new Error('Slug is already in use.');
+      throw new Error('自定义短链标识已被占用。');
     }
   }
 
@@ -193,12 +193,12 @@ export async function onRequestPost(context) {
   try {
     formData = await request.formData();
   } catch {
-    return apiError('BAD_REQUEST', 'multipart/form-data request is required.', 400);
+    return apiError('BAD_REQUEST', '请求必须使用 multipart/form-data 格式。', 400);
   }
 
   const file = formData.get('file');
   if (!file) {
-    return apiError('VALIDATION_ERROR', 'Field "file" is required.', 400);
+    return apiError('VALIDATION_ERROR', '缺少必填字段 "file"。', 400);
   }
 
   const url = new URL(request.url);
@@ -209,7 +209,7 @@ export async function onRequestPost(context) {
   const slug = String(formData.get('slug') || url.searchParams.get('slug') || '');
   const normalizedSlug = sanitizeSlug(slug);
   if (slug && !normalizedSlug) {
-    return apiError('VALIDATION_ERROR', 'Field "slug" must contain only letters, numbers, "_" or "-".', 400);
+    return apiError('VALIDATION_ERROR', '字段 "slug" 只能包含字母、数字、下划线或短横线。', 400);
   }
 
   const uploadForm = new FormData();
@@ -246,7 +246,7 @@ export async function onRequestPost(context) {
   }
 
   if (!uploadResponse.ok) {
-    const message = uploadPayload?.error || uploadPayload?.message || 'Upload failed.';
+    const message = uploadPayload?.error || uploadPayload?.message || '上传失败。';
     const status = resolveUploadErrorStatus(uploadResponse.status || 500, message);
     const code = status === 413 ? 'FILE_TOO_LARGE' : 'UPLOAD_FAILED';
     return apiError(code, message, status);
@@ -254,7 +254,7 @@ export async function onRequestPost(context) {
 
   const publicId = extractUploadResultId(uploadPayload);
   if (!publicId) {
-    return apiError('UPLOAD_FAILED', 'Upload response did not include file id.', 502);
+    return apiError('UPLOAD_FAILED', '上传响应中缺少文件标识。', 502);
   }
 
   const lookup = await findRecordByFileId(env, publicId);
@@ -268,8 +268,8 @@ export async function onRequestPost(context) {
         slug: normalizedSlug,
       });
     } catch (error) {
-      const message = error?.message || 'Failed to write upload metadata.';
-      if (message.toLowerCase().includes('slug is already in use')) {
+      const message = error?.message || '写入上传元数据失败。';
+      if (message.includes('已被占用')) {
         return apiError('SLUG_CONFLICT', message, 409);
       }
       return apiError('UPLOAD_METADATA_FAILED', message, 500);
@@ -304,7 +304,7 @@ export async function onRequestPost(context) {
 
 export async function onRequest(context) {
   if (context.request.method !== 'POST') {
-    return apiError('METHOD_NOT_ALLOWED', 'Method not allowed.', 405);
+    return apiError('METHOD_NOT_ALLOWED', '请求方法不被允许。', 405);
   }
   return onRequestPost(context);
 }
